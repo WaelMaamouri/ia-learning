@@ -61,3 +61,63 @@
 ### À retenir pour l'entretien
 
 - « Je mesure la latence et les tokens, j'adapte le niveau de raisonnement à la tâche, et je ne fais jamais confiance aveuglément à la sortie d'un LLM : je la valide avant toute action. »
+
+## Jour 1 (suite) : sorties structurées
+
+### Ce que j'ai fait
+
+- Script `03_extraction.py` : extraction d'un
+  rapport d'intervention en JSON, imposé par un
+  schéma (`response_format` + `json_schema`).
+- Schéma décrit avec Pydantic (`BaseModel`,
+  `Literal`, `Optional`), puis validation de la
+  réponse avec `model_validate_json`.
+- Contrôle par le code : l'adresse extraite
+  doit apparaître dans le rapport.
+
+### Ce que j'ai appris
+
+- Le schéma impose la FORME (champs, types,
+  valeurs autorisées), pas le FOND (exactitude).
+- Avec Ollama, les descriptions des champs ne
+  sont pas envoyées au modèle : les tokens en
+  entrée restaient à 155. Les consignes doivent
+  aller dans le prompt système.
+- Si une consigne ne change rien, vérifier
+  d'abord qu'elle arrive bien au modèle
+  (les tokens en entrée sont un bon indicateur).
+- `default=None` rend un champ facultatif : le
+  modèle peut l'omettre et Pydantic le remplit
+  en silence. Sans valeur par défaut, la clé
+  est obligatoire (valeur ou null) : le modèle
+  doit prendre position.
+  -> En PHP : `?string $a` contre `?string $a = null`.
+- Un contrôle doit traiter 3 cas : absent,
+  vérifié, inventé.
+- Des exemples dans le prompt aident les petits
+  modèles. Il faut les choisir différents des
+  données testées pour ne pas souffler la réponse.
+
+### Évolution du résultat
+
+| Version           | adresse       | anomalie                           |
+| ----------------- | ------------- | ---------------------------------- |
+| Initiale          | absente       | baisse_de_pression                 |
+| Champ obligatoire | Rue des Lices | baisse_de_pression                 |
+| + prompt précis   | Rue des Lices | Fuite sur canalisation fonte DN100 |
+
+### Problèmes rencontrés
+
+- `List` non défini : utiliser `list[str]`
+  (minuscule, intégré à Python).
+- Résultat identique malgré mes modifications :
+  le fichier n'était pas enregistré.
+  Vérifier avec `Get-Content` / `Select-String`.
+
+### À retenir pour l'entretien
+
+- « Pour intégrer un LLM dans un ERP, j'impose
+  un schéma JSON, je valide avec Pydantic, je
+  rends les champs obligatoires et je contrôle
+  les champs critiques par le code avant toute
+  écriture en base. »
