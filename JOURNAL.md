@@ -29,3 +29,35 @@
 - « Je sais brancher une application sur plusieurs fournisseurs de LLM (local avec Ollama, cloud avec OpenAI ou Anthropic) et je surveille les tokens, le coût et la latence. »
 
 '@ | Add-Content JOURNAL.md -Encoding utf8
+
+## Jour 1 (suite) : streaming, raisonnement et hallucinations
+
+### Ce que j'ai fait
+
+- Script `02_streaming.py` : affichage de la réponse au fur et à mesure (`stream=True`).
+- Désactivation du raisonnement du modèle avec `reasoning_effort="none"`.
+- `temperature=0` pour des réponses plus stables.
+
+### Résultats
+
+|                  | Raisonnement activé | Raisonnement désactivé |
+| ---------------- | ------------------- | ---------------------- |
+| Tokens en sortie | 1 539               | 105                    |
+| Durée totale     | 139 s               | 19,7 s                 |
+
+### Ce que j'ai appris
+
+- Le streaming n'accélère pas la génération, mais l'utilisateur voit le texte arriver tout de suite. C'est indispensable pour l'expérience utilisateur.
+- Avec le streaming, l'objet `usage` n'arrive que dans le dernier chunk, et seulement si on le demande (`stream_options={"include_usage": True}`).
+- Désactiver le raisonnement sur une tâche simple divise ici les tokens par 15 et le temps par 7, sans perte de qualité visible.
+- **Hallucination** : le modèle a inventé une adresse (« 16 chemin de Saint-Henry » au lieu de « rue des Lices »), même avec `temperature=0`. Une température basse rend le modèle plus stable, pas plus exact.
+  - En entreprise, il ne faut jamais envoyer directement une sortie d'IA dans un système (ERP, base, e-mail client) sans la contrôler.
+  - Parades : prompt strict (« n'invente rien »), sorties structurées en JSON validées, contrôle des champs critiques par le code, et validation humaine si l'enjeu est important.
+
+### Bug corrigé
+
+- J'affichais `time.time()` (un timestamp, nombre de secondes depuis 1970) au lieu de `time.time() - debut` (une durée).
+
+### À retenir pour l'entretien
+
+- « Je mesure la latence et les tokens, j'adapte le niveau de raisonnement à la tâche, et je ne fais jamais confiance aveuglément à la sortie d'un LLM : je la valide avant toute action. »
