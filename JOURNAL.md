@@ -121,3 +121,67 @@
   rends les champs obligatoires et je contrôle
   les champs critiques par le code avant toute
   écriture en base. »
+
+## Jour 2 : tool calling, mon premier agent
+
+### Ce que j'ai fait
+
+- Script `04_agent.py` : un agent qui répond à
+  des questions sur des clients en appelant mes
+  fonctions Python (fausse base type ERP).
+- 3 outils : `get_client`, `get_interventions`,
+  `search_client`.
+- Boucle d'agent écrite à la main, sans
+  framework, avec une limite de 5 tours.
+
+### Comment marche un agent
+
+1. J'envoie au modèle la question + la liste
+   des outils (nom, description, paramètres).
+2. Le modèle n'exécute rien : il renvoie des
+   `tool_calls` (« appelle telle fonction avec
+   tels arguments »).
+3. MON code exécute la fonction, puis renvoie
+   le résultat avec `role: "tool"` et le
+   `tool_call_id` correspondant.
+4. On recommence jusqu'à ce que le modèle
+   réponde sans demander d'outil.
+
+### Ce que j'ai observé
+
+- Appels parallèles : pour « qui est C001 et
+  combien d'interventions ? », il appelle les
+  2 outils dans le même tour.
+- Appels enchaînés : avec un nom de client, il
+  appelle `search_client`, récupère l'id, puis
+  appelle `get_interventions`.
+- Client inconnu : il lit l'erreur renvoyée par
+  l'outil et n'invente rien.
+- Sans outil de recherche par nom, il demande
+  l'id au lieu de le deviner. C'est fiable, mais
+  peu pratique : la solution est d'ajouter un
+  outil, pas de demander à l'utilisateur.
+- Question hors sujet : il répond quand même.
+  Pour un assistant métier, il faut limiter le
+  périmètre dans le prompt système.
+
+### Bonnes pratiques retenues
+
+- La `description` d'un outil est un prompt :
+  c'est elle qui fait choisir le bon outil.
+- Toujours limiter le nombre de tours.
+- Ne jamais exécuter un outil inconnu : le
+  modèle peut demander n'importe quoi.
+- Garder des noms cohérents entre les outils
+  (`client_id` partout).
+- Les outils d'écriture (ticket, e-mail) sont
+  plus risqués : l'ordre des appels et la
+  validation deviennent critiques.
+
+### À retenir pour l'entretien
+
+- « J'ai codé une boucle d'agent sans framework :
+  je sais ce que font LangChain ou le SDK
+  Agents, parce que je l'ai écrit moi-même.
+  Le modèle propose, mon code exécute et
+  contrôle. »
