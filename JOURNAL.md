@@ -185,3 +185,48 @@
   Agents, parce que je l'ai écrit moi-même.
   Le modèle propose, mon code exécute et
   contrôle. »
+
+## Jour 2 (suite) : outil d'écriture et
+
+## confirmation humaine
+
+### Ce que j'ai fait
+
+- Ajout d'un outil `create_ticket` qui écrit
+  dans la « base » (liste TICKETS).
+- Confirmation humaine obligatoire avant toute
+  action d'écriture (human in the loop) :
+  l'agent propose, l'humain valide.
+- `try/except` autour de l'exécution des outils :
+  si les arguments sont invalides, l'erreur est
+  renvoyée au modèle au lieu de faire planter
+  le programme.
+
+### Ce que j'ai appris
+
+- Lire est sans risque, écrire est risqué :
+  on sépare les outils de lecture et les outils
+  d'écriture (`OUTILS_ECRITURE`).
+- La fonction vérifie elle-même ses données
+  (client existant, urgence valide), même si le
+  modèle se trompe. C'est comme une validation
+  côté serveur.
+- `enum` dans la description d'un paramètre :
+  le modèle a bien traduit « c'est urgent » en
+  `"haute"`.
+- Le résultat d'un outil est aussi un prompt.
+  Avec « Action refusée », le modèle a cru que
+  des informations manquaient. Avec un message
+  explicite (ce qui s'est passé + quoi faire),
+  il répond correctement.
+- Encodage : enregistrer les fichiers en UTF-8,
+  et utiliser des clés sans accent dans les
+  données (`numero`, pas `numéro`).
+
+### À retenir pour l'entretien
+
+- « Dans un agent qui agit sur un ERP, je sépare
+  la lecture et l'écriture. Les écritures passent
+  par une validation humaine, et les fonctions
+  valident leurs propres données : on ne fait
+  jamais confiance au modèle seul. »
